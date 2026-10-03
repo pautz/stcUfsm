@@ -156,7 +156,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
       <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
 
       <input type="submit" class="btn btn-primary btn-xl" value="Entrar">
-      <a class="btn btn-info btn-xl" href="http://localhost/">Início</a>
+      <a class="btn btn-info btn-xl" href="https://carlitoslocacoes.com/">Início</a>
       <p>Não tem conta?<br><a href="register_odonto2.php" class="btn btn-success btn-xl">Registrar-se</a></p>
     </form>
   </div>
