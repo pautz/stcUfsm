@@ -826,7 +826,7 @@ CREATE TABLE `consorcio_cadastro2` (
   `valor_hectare` decimal(12,2) DEFAULT NULL,
   `aprovacao` tinyint(1) DEFAULT 0,
   `cep` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -855,7 +855,7 @@ CREATE TABLE `consorcio_cadastro3` (
   `valor_hectare` decimal(12,2) DEFAULT NULL,
   `aprovacao` tinyint(1) DEFAULT 0,
   `cep` varchar(20) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
