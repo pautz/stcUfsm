@@ -4,8 +4,8 @@ date_default_timezone_set('America/Cuiaba');
 
 // Conexão com o banco
 define('DB_SERVER', '127.0.0.1');
-define('DB_USERNAME', 'u839226731_farol');
-define('DB_PASSWORD', 'Meta6595869!');
+define('DB_USERNAME', 'root');
+define('DB_PASSWORD', '');
 define('DB_NAME', 'u839226731_farol');
 
 $link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
