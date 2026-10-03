@@ -2962,7 +2962,7 @@ CREATE TABLE `tratores` (
   `placa_trator` varchar(20) NOT NULL,
   `renavam` varchar(20) NOT NULL,
   `data_cadastro` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
