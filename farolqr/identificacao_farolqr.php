@@ -22,7 +22,7 @@ function validarCPF($cpf) {
 
 // Sessão persistente
 $lifetime = 86400; // 1 dia
-$domain   = 'carlitoslocacoes.com';
+$domain   = 'localhost';
 
 ini_set('session.cookie_lifetime', $lifetime);
 ini_set('session.gc_maxlifetime', $lifetime);
@@ -31,7 +31,7 @@ session_set_cookie_params([
     'lifetime' => $lifetime,
     'path'     => '/',
     'domain'   => $domain,
-    'secure'   => true,
+    'secure'   => false,
     'httponly' => true,
     'samesite' => 'Lax'
 ]);
@@ -43,7 +43,7 @@ if (
     !isset($_SESSION["loggedin_odonto2"]) || $_SESSION["loggedin_odonto2"] !== true ||
     empty($_SESSION["username_odonto2"])
 ) {
-    header("Location: https://carlitoslocacoes.com/login/login_farolqr.php");
+    header("Location: http://localhost/login/login_farolqr.php");
     exit;
 }
 
@@ -66,7 +66,7 @@ $caixaExistente = $resultVerifica->fetch_assoc();
 $stmtVerifica->close();
 
 // 🔐 reCAPTCHA Secret Key
-$secretKey = "6LcH9M4sAAAAAFep6xxJPNgr7m4LuWBavl8uKQdI";
+$secretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; // Chave de teste do Google
 
 // Criar caixa postal
 if (isset($_POST['criar_caixa_postal'])) {
@@ -120,15 +120,13 @@ if (isset($_POST['criar_caixa_postal'])) {
                 $stmt->bind_param("sssss", $usuario, $documento, $telefone, $fotoPerfil, $codigo);
                 $stmt->execute();
                 $stmt->close();
-             $mensagem = "📬 Caixa postal criada com sucesso: <strong>$codigo</strong>";
+                $mensagem = "📬 Caixa postal criada com sucesso: <strong>$codigo</strong>";
 
-echo <<<HTML
-    <button class="btn-login" onclick="window.location.href='https://carlitoslocacoes.com/index.php'">
+                echo <<<HTML
+    <button class="btn-login" onclick="window.location.href='http://localhost/index.php'">
         Início
     </button>
 HTML;
-
-
             }
         }
     }
@@ -156,10 +154,10 @@ if (isset($_POST['editar_documento'])) {
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
      body { 
-  font-family: Arial, sans-serif; 
-  background: linear-gradient(135deg, #ff006e, #d81b60, #880e4f); /* fundo rosa */
-  padding: 20px; 
-  color: #fff;
+   font-family: Arial, sans-serif; 
+   background: linear-gradient(135deg, #ff006e, #d81b60, #880e4f); /* fundo rosa */
+   padding: 20px; 
+   color: #fff;
 }
 
 .container { 
@@ -280,7 +278,7 @@ img.foto-perfil {
     <div class="container">
        <h2>Bem-vindo, <?= htmlspecialchars($_SESSION["username_odonto2"]) ?></h2>
 
-       <form method="POST" action="" enctype="multipart/form-data">
+        <form method="POST" action="" enctype="multipart/form-data">
             <label for="documento">Documento CPF:</label>
             <input type="text" name="documento" id="documento" placeholder="Digite seu documento" required>
             <label for="telefone">Telefone:</label>
@@ -289,22 +287,22 @@ img.foto-perfil {
             <input type="file" name="foto_perfil" id="foto_perfil" accept="image/*">
 
             <!-- reCAPTCHA -->
-            <div class="g-recaptcha" data-sitekey="6LcH9M4sAAAAAFYMLI8H3YVtrmLrtbdgILf9jxWk"></div>
+            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
 
             <input type="hidden" name="criar_caixa_postal" value="1">
             <button type="submit">📬 Criar Caixa Postal</button>
         </form>
- <button class="btn-login" onclick="window.location.href='https://carlitoslocacoes.com/farolqr/balance_transacao.php'">
+  <button class="btn-login" onclick="window.location.href='http://localhost/farolqr/balance_transacao.php'">
                     Banco
                 </button>
-                <button class="btn-login" onclick="window.location.href='https://carlitoslocacoes.com/sys/index.php'">
+                <button class="btn-login" onclick="window.location.href='http://localhost/sys/index.php'">
                     Comprar Aura
                 </button>
-                 <button class="btn-login" onclick="window.location.href='https://carlitoslocacoes.com/login/logout.php'">
+                 <button class="btn-login" onclick="window.location.href='http://localhost/login/logout.php'">
             🔐 Sair
         </button>
         <!-- Botões extras -->
-       
+        
             
         <?php if ($mensagem): ?>
             <div class="mensagem"><?= $mensagem ?></div>
@@ -327,19 +325,12 @@ img.foto-perfil {
                     <button type="submit">✏️ Editar Documento</button>
                 </form>
 
-               
-                
-                
-                
-                <button class="btn-login" onclick="window.location.href='https://carlitoslocacoes.com/site/opentowork_city.php'">
+                <button class="btn-login" onclick="window.location.href='http://localhost/site/opentowork_city.php'">
                     OpenToWork Assinantes
                 </button>
-                <button class="btn-login" onclick="window.location.href='https://carlitoslocacoes.com/index.php'">
+                <button class="btn-login" onclick="window.location.href='http://localhost/index.php'">
             Início
         </button>
-
-       
-             
             </div>
         <?php endif; ?>
     </div>
