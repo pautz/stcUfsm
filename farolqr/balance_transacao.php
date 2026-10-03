@@ -9,7 +9,7 @@ $usuario = $_SESSION["username_odonto2"];
 $mensagem = "";
 $comprovante = null;
 
-$conn = new mysqli("localhost", "u839226731_farol", "Meta6595869!", "u839226731_farol");
+$conn = new mysqli("localhost", "root", "", "u839226731_farol");
 if ($conn->connect_error) die("Erro na conexão: " . $conn->connect_error);
 $conn->set_charset("utf8mb4");
 
@@ -24,7 +24,7 @@ $saldoAura = $userData["saldo_total"] ?? 0;
 $stmtUser->close();
 
 if (!$userData) {
-    header("Location: https://carlitoslocacoes.com/farolqr/identificacao_farolqr.php");
+    header("Location: https://localhost/farolqr/identificacao_farolqr.php");
     exit;
 }
 
@@ -115,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["enviar_aura"])) {
 
                 // QR Code permanente
                 include "../tickets/2/phpqrcode/qrlib.php";
-                $qrcodeUrl = "https://carlitoslocacoes.com/aurascan.php?buscaId=" . $transacaoId;
+                $qrcodeUrl = "https://localhost/aurascan.php?buscaId=" . $transacaoId;
                 $_SESSION["qrcode_url"] = $qrcodeUrl;
                 $qrDir = __DIR__ . "/qrcodes/";
                 if (!file_exists($qrDir)) mkdir($qrDir, 0777, true);
@@ -345,9 +345,9 @@ img.qr {
 
   <!-- Menu lateral -->
   <nav class="sidebar" id="sidebar">
-    <a href="https://carlitoslocacoes.com/index.php" target="_blank">🏠 Início</a>
-    <a href="https://carlitoslocacoes.com/sys/index.php" target="_blank">🛒 Compre AURA</a>
-    <a href="https://carlitoslocacoes.com/login/logout.php">🚪 Sair</a>
+    <a href="https://localhost/index.php" target="_blank">🏠 Início</a>
+    <a href="https://localhost/sys/index.php" target="_blank">🛒 Compre AURA</a>
+    <a href="https://localhost/login/logout.php">🚪 Sair</a>
   </nav>
   <script>
 function toggleMenu() {
