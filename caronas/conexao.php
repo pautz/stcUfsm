@@ -7,8 +7,8 @@ error_reporting(E_ALL);
 session_start();
 
 $host = 'localhost';
-$usuario_db = 'u839226731_farol';
-$senha_db = 'Meta6595869!';
+$usuario_db = 'root';
+$senha_db = '';
 $banco = 'u839226731_farol';
 
 $conn = new mysqli($host, $usuario_db, $senha_db, $banco);
