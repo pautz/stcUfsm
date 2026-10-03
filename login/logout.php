@@ -22,6 +22,6 @@ $_SESSION = array();
 session_destroy();
 
 // Redireciona para a página inicial ou login
-header("location: ../index.php");
+header("location: /caronas");
 exit;
 ?>
