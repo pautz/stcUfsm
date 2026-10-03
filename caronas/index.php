@@ -3,7 +3,7 @@ include 'conexao.php';
 
 // 1. Verificar se a sessão do utilizador está ativa
 if (!isset($_SESSION['username_odonto2']) || empty($_SESSION['username_odonto2'])) {
-    header("Location: https://carlitoslocacoes.com/login/login_farolqr.php");
+    header("Location: http://localhost/login/login_farolqr.php");
     exit;
 }
 
@@ -18,7 +18,7 @@ $resultado = $stmt->get_result();
 
 if ($resultado->num_rows === 0) {
     session_destroy();
-    header("Location: https://carlitoslocacoes.com/login/login_farolqr.php");
+    header("Location: http://localhost/login/login_farolqr.php");
     exit;
 }
 
@@ -35,7 +35,7 @@ if (empty($caixa_postal_usuario)) {
     echo "<h2 style='color: #d9534f;'>Acesso Restrito</h2>";
     echo "<p>Sua conta (<strong>" . htmlspecialchars($user_logado) . "</strong>) não possui uma <strong>Caixa Postal</strong> vinculada na base de dados.</p>";
     echo "<p>Por favor, configure sua caixa postal ou entre em contato com o suporte.</p>";
-    echo "<a href='https://carlitoslocacoes.com/login/logout.php' style='display:inline-block; margin-top:15px; padding:10px 20px; background:#333; color:#ffeb3b; text-decoration:none; font-weight:bold; border:2px solid #000;'>Sair / Tentar Outra Conta</a>";
+    echo "<a href='http://localhost/login/logout.php' style='display:inline-block; margin-top:15px; padding:10px 20px; background:#333; color:#ffeb3b; text-decoration:none; font-weight:bold; border:2px solid #000;'>Sair</a>";
     echo "</div></div>";
     exit;
 }
@@ -88,13 +88,13 @@ $caronas = $stmt_c->get_result();
         body { background-color: #ffeb3b; font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; }
         .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border: 3px solid #000; }
         h1, h2 { text-align: center; color: #333; }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background-color: #e0e0e0; color: #000; text-align: center; font-size: 20px; font-weight: bold; text-decoration: none; border: 2px solid #000; box-sizing: border-box; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background-color: #e0e0e0; color: #000; text-align: center; font-size: 20px; font-weight: bold; text-decoration: none; border: 2px solid #000; }
         .btn:hover { background-color: #d5d5d5; }
         .card { background: #f9f9f9; border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
         .card-propria { background: #e8f5e9; border: 2px solid #4CAF50; } /* Destaque para as caronas do próprio utilizador */
-        .saldo-box { background: #333; color: #ffeb3b; padding: 10px; text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; border: 2px solid #000; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px; }
+        .saldo-box { background: #333; color: #ffeb3b; padding: 10px; text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; border: 2px solid #000; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .btn-sair { background: #d9534f; color: #fff; padding: 5px 10px; font-size: 14px; text-decoration: none; border: 1px solid #000; }
-        .whatsapp-link { display: inline-block; background-color: #25D366; color: white; padding: 8px 12px; text-decoration: none; font-weight: bold; border-radius: 4px; margin-top: 5px; font-size: 14px; border: 1px solid #000; }
+        .whatsapp-link { display: inline-block; background-color: #25D366; color: white; padding: 8px 12px; text-decoration: none; font-weight: bold; border-radius: 4px; margin-top: 5px; font-size: 14px; }
         .whatsapp-link:hover { background-color: #1ebe5d; }
         .carona-id { background: #333; color: #ffeb3b; padding: 3px 8px; font-weight: bold; font-size: 15px; display: inline-block; margin-bottom: 10px; border: 1px solid #000; }
         .badge-sua { background: #4CAF50; color: #fff; padding: 3px 8px; font-weight: bold; font-size: 13px; display: inline-block; margin-left: 5px; border: 1px solid #000; }
@@ -116,7 +116,7 @@ $caronas = $stmt_c->get_result();
     
     <div class="saldo-box">
         <span>Usuário: <?php echo htmlspecialchars($user_logado); ?> | Caixa: <?php echo htmlspecialchars($caixa_postal_usuario); ?> | Saldo: R$ <?php echo number_format($saldo_total, 2, ',', '.'); ?></span>
-        <a href="https://carlitoslocacoes.com/login/logout.php" class="btn-sair">Sair</a>
+        <a href="http://localhost/login/logout.php" class="btn-sair">Sair</a>
     </div>
 
     <h2>Menu Principal</h2>
@@ -158,7 +158,7 @@ $caronas = $stmt_c->get_result();
                 <?php if (!empty($c['telefone'])): ?>
                     <p><strong>Telefone / WhatsApp:</strong> <?php echo htmlspecialchars($c['telefone']); ?></p>
                     <?php if (!$eh_minha): ?>
-                        <a href="https://wa.me/55<?php echo preg_replace('/\D/', '', $c['telefone']); ?>?text=Olá,%20peguei%20a%20carona%20(ID:%20<?php echo $c['id']; ?>)%20no%20S.T.C.%20Segue%20o%20comprovante:" target="_blank" class="whatsapp-link">Enviar Comprovante via WhatsApp</a>
+                        <a href="https://wa.me/55<?php echo preg_replace('/\D/', '', $c['telefone']); ?>?text=Olá,%20peguei%20a%20carona%20(ID:%20<?php echo $c['id']; ?>)%20no%20S.T.C.%20Segue%20a%20carona%20e%20posso%20confirmar%20a%20partida%20e%20horário." class="whatsapp-link" target="_blank">Contato via WhatsApp</a>
                     <?php endif; ?>
                 <?php endif; ?>
 
@@ -169,7 +169,7 @@ $caronas = $stmt_c->get_result();
                         <button type="submit" class="btn" style="background-color: #4CAF50; color: white; padding: 10px; font-size: 16px; cursor: pointer;">Pegar Carona</button>
                     </form>
                 <?php else: ?>
-                    <p style="margin-top: 15px; text-align: center; font-weight: bold; color: #2e7d32; background: #c8e6c9; padding: 8px; border: 1px solid #4CAF50;">Esta é a carona que você disponibilizou.</p>
+                    <p style="margin-top: 15px; text-align: center; font-weight: bold; color: #2e7d32; background: #c8e6c9; padding: 8px; border: 1px solid #4CAF50;">Esta é a carona que você digitou como motorista.</p>
                 <?php endif; ?>
             </div>
         <?php endwhile; ?>
@@ -203,7 +203,7 @@ $caronas = $stmt_c->get_result();
         <?php endif; ?>
 
     <?php else: ?>
-        <p style="text-align: center;">Nenhuma carona encontrada <?php echo !empty($filtro_siape) ? "correspondente ao SIAPE/Motorista '".htmlspecialchars($filtro_siape)."'" : "disponível no momento"; ?>.</p>
+        <p style="text-align: center;">Nenhuma carona encontrada <?php echo !empty($filtro_siape) ? "correspondente ao SIAPE/Motorista '".htmlspecialchars($filtro_siape)."'" : "disponível no momento."; ?></p>
         <?php if (!empty($filtro_siape)): ?>
             <div style="text-align: center; margin-top: 10px;">
                 <a href="index.php" style="color: #000; font-weight: bold;">Ver todas as caronas</a>
