@@ -155,7 +155,7 @@ if (isset($_POST['editar_documento'])) {
     <style>
      body { 
    font-family: Arial, sans-serif; 
-   background: linear-gradient(135deg, #ff006e, #d81b60, #880e4f); /* fundo rosa */
+   background: linear-gradient(135deg, #ff006e, #d81b60, #880e4f);
    padding: 20px; 
    color: #fff;
 }
@@ -163,7 +163,7 @@ if (isset($_POST['editar_documento'])) {
 .container { 
   max-width: 600px; 
   margin: auto; 
-  background: #1e1e2f; /* card escuro para contraste */
+  background: #1e1e2f;
   padding: 20px; 
   border-radius: 12px; 
   box-shadow: 0 6px 20px rgba(0,0,0,0.4); 
@@ -200,7 +200,7 @@ button {
   width: 100%; 
   padding: 12px; 
   margin-top: 15px;
-  background: linear-gradient(90deg, #e91e63, #ad1457); /* degradê rosa */
+  background: linear-gradient(90deg, #e91e63, #ad1457);
   color: #fff;
   border: none; 
   border-radius: 28px;
@@ -271,7 +271,6 @@ img.foto-perfil {
   background: #ad1457; 
   transform: scale(1.05);
 }
-
     </style>
 </head>
 <body>
