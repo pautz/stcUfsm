@@ -1,212 +1,347 @@
 <?php
-session_start();
-date_default_timezone_set('America/Cuiaba');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Conexão com o banco
-// Local XAMPP usa usuário 'root' sem senha. Para produção, pode-se sobrescrever pelas variáveis de ambiente.
-define('DB_SERVER', getenv('DB_SERVER') ?: '127.0.0.1');
-define('DB_USERNAME', getenv('DB_USERNAME') ?: 'root');
-define('DB_PASSWORD', getenv('DB_PASSWORD') ?: '');
-define('DB_NAME', getenv('DB_NAME') ?: 'u839226731_farol');
+// Função para validar CPF
+function validarCPF($cpf) {
+    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    if (strlen($cpf) != 11) return false;
+    if (preg_match('/^(.)\1{10}$/', $cpf)) return false;
 
-$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
-if($link === false){
-    die("ERROR: Could not connect. " . mysqli_connect_error());
+    for ($t = 9; $t < 11; $t++) {
+        $soma = 0;
+        for ($i = 0; $i < $t; $i++) {
+            $soma += $cpf[$i] * (($t + 1) - $i);
+        }
+        $digito = ((10 * $soma) % 11) % 10;
+        if ($cpf[$t] != $digito) return false;
+    }
+    return true;
 }
 
-// Variáveis
-$username = $password = $confirm_password = "";
-$username_err = $password_err = $confirm_password_err = "";
-$maior18_err = "";
+// Sessão persistente
+$lifetime = 86400; // 1 dia
+$domain   = 'localhost';
 
-// Processa o formulário
-if($_SERVER["REQUEST_METHOD"] == "POST"){
+ini_set('session.cookie_lifetime', $lifetime);
+ini_set('session.gc_maxlifetime', $lifetime);
 
+session_set_cookie_params([
+    'lifetime' => $lifetime,
+    'path'     => '/',
+    'domain'   => $domain,
+    'secure'   => true,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+
+session_start();
+
+// Verifica login
+if (
+    !isset($_SESSION["loggedin_odonto2"]) || $_SESSION["loggedin_odonto2"] !== true ||
+    empty($_SESSION["username_odonto2"])
+) {
+    header("Location: https://localhost/login/login_farolqr.php");
+    exit;
+}
+
+$usuario = $_SESSION["username_odonto2"];
+
+// Conexão
+$conn = new mysqli("localhost", "root", "", "u839226731_farol");
+$conn->set_charset("utf8mb4");
+
+$mensagem = "";
+$caixaExistente = null;
+
+// Verifica se já existe caixa postal
+$stmtVerifica = $conn->prepare("SELECT caixa_postal, documento, telefone, orcid, foto_perfil, data_criacao 
+                                FROM identificacao_odonto2 WHERE username = ?");
+$stmtVerifica->bind_param("s", $usuario);
+$stmtVerifica->execute();
+$resultVerifica = $stmtVerifica->get_result();
+$caixaExistente = $resultVerifica->fetch_assoc();
+$stmtVerifica->close();
+
+// 🔐 reCAPTCHA Secret Key
+$secretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
+
+// Criar caixa postal
+if (isset($_POST['criar_caixa_postal'])) {
     // Verifica reCAPTCHA
-    if(empty($_POST['g-recaptcha-response'])){
-        die("Por favor, confirme que você não é um robô.");
+    $recaptchaResponse = $_POST['g-recaptcha-response'];
+    $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secretKey}&response={$recaptchaResponse}");
+    $captchaSuccess = json_decode($verify);
+
+    if ($captchaSuccess->success != true) {
+        $mensagem = "❌ Falha na verificação reCAPTCHA. Tente novamente.";
     } else {
-        $recaptcha_secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; // Secret Key de teste do Google
-        $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret="
-            .$recaptcha_secret."&response=".$_POST['g-recaptcha-response']);
-        $responseKeys = json_decode($response, true);
+        if ($caixaExistente) {
+            $mensagem = "⚠️ Você já possui uma caixa postal.";
+        } else {
+            $documento = trim($_POST["documento"]);
+            $telefone = trim($_POST["telefone"]);
+            $fotoPerfil = null;
 
-        if(intval($responseKeys["success"]) !== 1) {
-            die("Falha na verificação do reCAPTCHA. Tente novamente.");
-        }
-    }
-
-    // Valida usuário
-    if(empty(trim($_POST["username"]))){
-        $username_err = "Digite um nome de usuário.";
-    } else{
-        $sql = "SELECT id FROM odonto2_users WHERE username = ?";
-        if($stmt = mysqli_prepare($link, $sql)){
-            mysqli_stmt_bind_param($stmt, "s", $param_username);
-            $param_username = trim($_POST["username"]);
-            if(mysqli_stmt_execute($stmt)){
-                mysqli_stmt_store_result($stmt);
-                if(mysqli_stmt_num_rows($stmt) == 1){
-                    $username_err = "Este nome de usuário já está em uso.";
-                } else{
-                    $username = trim($_POST["username"]);
+            // Validação CPF
+            if (!validarCPF($documento)) {
+                $mensagem = "❌ Documento inválido. Informe um CPF válido.";
+            } else {
+                if (isset($_FILES['foto_perfil']) && $_FILES['foto_perfil']['error'] === UPLOAD_ERR_OK) {
+                    $ext = strtolower(pathinfo($_FILES['foto_perfil']['name'], PATHINFO_EXTENSION));
+                    $permitidas = ['jpg','jpeg','png','gif'];
+                    if (in_array($ext, $permitidas)) {
+                        $nomeArquivo = 'perfil_' . uniqid() . '.' . $ext;
+                        $caminho = 'uploads/' . $nomeArquivo;
+                        if (!is_dir('uploads')) mkdir('uploads');
+                        move_uploaded_file($_FILES['foto_perfil']['tmp_name'], $caminho);
+                        $fotoPerfil = $caminho;
+                    } else {
+                        $mensagem = "❌ Tipo de arquivo inválido.";
+                    }
                 }
-            } else{
-                echo "Erro ao verificar usuário. Tente novamente.";
+
+                // Gerar código único
+                do {
+                    $codigo = 'FAROLQR_' . substr(md5($usuario . microtime(true) . random_int(1000, 9999)), 0, 10);
+                    $stmtCheck = $conn->prepare("SELECT 1 FROM identificacao_odonto2 WHERE caixa_postal = ?");
+                    $stmtCheck->bind_param("s", $codigo);
+                    $stmtCheck->execute();
+                    $stmtCheck->store_result();
+                    $existe = $stmtCheck->num_rows > 0;
+                    $stmtCheck->close();
+                } while ($existe);
+
+                $stmt = $conn->prepare("INSERT INTO identificacao_odonto2 
+                    (username, documento, telefone, foto_perfil, caixa_postal, data_criacao) 
+                    VALUES (?, ?, ?, ?, ?, NOW())");
+                $stmt->bind_param("sssss", $usuario, $documento, $telefone, $fotoPerfil, $codigo);
+                $stmt->execute();
+                $stmt->close();
+             $mensagem = "📬 Caixa postal criada com sucesso: <strong>$codigo</strong>";
+
+echo <<<HTML
+    <button class="btn-login" onclick="window.location.href='https://localhost/caronas'">
+        Início
+    </button>
+HTML;
+
+
             }
-            mysqli_stmt_close($stmt);
         }
     }
+}
 
-    // Valida senha
-    if(empty(trim($_POST["password"]))){
-        $password_err = "Digite uma senha.";
-    } elseif(strlen(trim($_POST["password"])) < 6){
-        $password_err = "A senha deve ter pelo menos 6 caracteres.";
-    } else{
-        $password = trim($_POST["password"]);
+// Atualizar documento
+if (isset($_POST['editar_documento'])) {
+    $novoDocumento = trim($_POST["novo_documento"]);
+    if (!validarCPF($novoDocumento)) {
+        $mensagem = "❌ Documento inválido. Informe um CPF válido.";
+    } else {
+        $stmtUpdate = $conn->prepare("UPDATE identificacao_odonto2 SET documento = ? WHERE username = ?");
+        $stmtUpdate->bind_param("ss", $novoDocumento, $usuario);
+        $stmtUpdate->execute();
+        $stmtUpdate->close();
+        $mensagem = "✅ Documento atualizado com sucesso.";
     }
-
-    // Confirma senha
-    if(empty(trim($_POST["confirm_password"]))){
-        $confirm_password_err = "Confirme sua senha.";
-    } else{
-        $confirm_password = trim($_POST["confirm_password"]);
-        if(empty($password_err) && ($password != $confirm_password)){
-            $confirm_password_err = "As senhas não coincidem.";
-        }
-    }
-
-    // Valida maior de 18 anos
-    if(empty($_POST["maior18"])){
-        $maior18_err = "É necessário confirmar que você tem 18 anos ou mais.";
-    }
-
-    // Se tudo estiver válido, insere no banco
-    if(empty($username_err) && empty($password_err) && empty($confirm_password_err) && empty($maior18_err)){
-        $sql = "INSERT INTO odonto2_users (username, password, maior18) VALUES (?, ?, ?)";
-        if($stmt = mysqli_prepare($link, $sql)){
-            mysqli_stmt_bind_param($stmt, "sss", $param_username, $param_password, $param_maior18);
-            $param_username = $username;
-            $param_password = password_hash($password, PASSWORD_DEFAULT);
-            $param_maior18 = 1; // sempre 1 se marcado
-            if(mysqli_stmt_execute($stmt)){
-                $_SESSION['loggedin_odonto2'] = true;
-                $_SESSION['username_odonto2'] = $username;
-                header("location: http://localhost/farolqr/identificacao_farolqr.php");
-                exit;
-            } else{
-                echo "Erro ao registrar. Tente novamente.";
-            }
-            mysqli_stmt_close($stmt);
-        }
-    }
-
-    mysqli_close($link);
 }
 ?>
-<!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Crie sua Conta Móveis Espectro</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(to right, #880e4f, #ad1457, #c2185b);
-      color: #fff;
-      text-align: center;
-      overflow-x: hidden;
-      padding: 40px;
-    }
-    .wrapper {
-      width: 100%; max-width: 500px; margin: auto;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 30px; border-radius: 15px;
-      box-shadow: 0 0 20px rgba(233, 30, 99, 0.4);
-      animation: fadeInUp 1.5s ease-in-out;
-    }
-    h2 { font-weight: 700; margin-bottom: 10px; animation: slideDown 1.2s ease-in-out; }
-    p { font-size: 16px; animation: fadeIn 2s ease-in-out; }
-    .form-group { text-align: left; margin-bottom: 15px; }
-    input[type="text"], input[type="password"] {
-      width: 100%; padding: 10px; border: none; border-radius: 8px;
-      background-color: rgba(255, 255, 255, 0.9); color: #333; transition: 0.3s;
-    }
-    input[type="text"]:focus, input[type="password"]:focus {
-      background-color: #fff; box-shadow: 0 0 10px #ec407a;
-    }
-    .btn-xl { padding: 12px 20px; font-size: 16px; border-radius: 10px; width: 48%; margin: 5px; transition: 0.3s; }
-    .btn-xl:hover { transform: scale(1.05); }
-    .btn-primary { background-color: #d81b60; border-color: #d81b60; }
-    .btn-primary:hover { background-color: #ad1457; border-color: #ad1457; }
-    .btn-info { background-color: #f06292; border-color: #f06292; }
-    .btn-info:hover { background-color: #ec407a; border-color: #ec407a; }
-    .btn-success { background-color: #e91e63; border-color: #e91e63; }
-    .btn-success:hover { background-color: #c2185b; border-color: #c2185b; }
-    .help-block { color: #ff4444; font-size: 0.9em; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-    @media (max-width: 600px) {
-      .btn-xl { width: 100%; }
-      .wrapper { padding: 20px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>📬 Caixa Postal Odonto2</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+     body { 
+  font-family: Arial, sans-serif; 
+  background: linear-gradient(135deg, #ff006e, #d81b60, #880e4f); /* fundo rosa */
+  padding: 20px; 
+  color: #fff;
+}
+
+.container { 
+  max-width: 600px; 
+  margin: auto; 
+  background: #1e1e2f; /* card escuro para contraste */
+  padding: 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4); 
+}
+
+h2 { 
+  color: #ff4081; 
+  text-align: center; 
+  font-weight: bold;
+}
+
+label { 
+  display: block; 
+  margin-top: 10px; 
+  font-weight: bold; 
+  color: #ff80ab;
+}
+
+input[type="text"], input[type="file"] {
+  width: 100%; 
+  padding: 10px; 
+  margin-top: 5px;
+  border: none; 
+  border-radius: 6px;
+  background: #2c2c3c; 
+  color: #fff;
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+button {
+  width: 100%; 
+  padding: 12px; 
+  margin-top: 15px;
+  background: linear-gradient(90deg, #e91e63, #ad1457); /* degradê rosa */
+  color: #fff;
+  border: none; 
+  border-radius: 28px;
+  cursor: pointer; 
+  font-size: 16px; 
+  font-weight: bold;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+button:hover { 
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #ec407a, #c2185b);
+}
+
+.mensagem { 
+  margin-top: 20px; 
+  text-align: center; 
+  font-size: 16px; 
+  color: #ff80ab; 
+}
+
+.caixa {
+  background: rgba(255,255,255,0.05); 
+  margin-top: 30px; 
+  padding: 15px;
+  border-left: 5px solid #ff4081; 
+  border-radius: 8px;
+}
+
+.caixa strong { 
+  display: block; 
+  font-size: 18px; 
+  color: #fff;
+}
+
+.caixa small { 
+  display: block; 
+  margin-top: 5px; 
+  color: #ccc; 
+}
+
+form.editar { 
+  margin-top: 15px; 
+}
+
+img.foto-perfil {
+  max-width: 150px; 
+  border-radius: 8px;
+  margin-top: 10px; 
+  display: block;
+  box-shadow: 0 0 10px rgba(233,30,99,0.6);
+}
+
+.btn-login {
+  background: #d81b60; 
+  color: #fff;
+  padding: 10px; 
+  border-radius: 6px;
+  font-size: 16px; 
+  margin-top: 20px;
+  width: 100%; 
+  border: none;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.btn-login:hover { 
+  background: #ad1457; 
+  transform: scale(1.05);
+}
+
+    </style>
 </head>
 <body>
-  <div class="wrapper">
-    <h2>Cadastre-se na FarolQR</h2>
-    <p>Preencha com seus dados para criar sua conta.</p>
-    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
-      <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
-        <label>Usuário</label>
-        <input type="text" name="username" class="form-control" value="<?php echo $username; ?>">
-        <span class="help-block"><?php echo $username_err; ?></span>
-      </div>
-      <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
-        <label>Senha</label>
-        <input type="password" name="password" class="form-control">
-        <span class="help-block"><?php echo $password_err; ?></span>
-      </div>
-      <div class="form-group <?php echo (!empty($confirm_password_err)) ? 'has-error' : ''; ?>">
-        <label>Confirme sua senha</label>
-        <input type="password" name="confirm_password" class="form-control">
-        <span class="help-block"><?php echo $confirm_password_err; ?></span>
-      </div>
-            <div class="form-group <?php echo (!empty($maior18_err)) ? 'has-error' : ''; ?>">
-        <div class="checkbox">
-          <label>
-            <input type="checkbox" name="maior18" value="1" required>
-            Confirmo que tenho 18 anos ou mais
-          </label>
-        </div>
-        <span class="help-block"><?php echo $maior18_err; ?></span>
-      </div>
+    <div class="container">
+       <h2>Bem-vindo, <?= htmlspecialchars($_SESSION["username_odonto2"]) ?></h2>
 
-      <!-- reCAPTCHA -->
-      <div class="form-group">
-        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
-      </div>
+       <form method="POST" action="" enctype="multipart/form-data">
+            <label for="documento">Documento CPF:</label>
+            <input type="text" name="documento" id="documento" placeholder="Digite seu documento" required>
+            <label for="telefone">Telefone:</label>
+            <input type="text" name="telefone" id="telefone" placeholder="Digite seu telefone" required>
+            <label for="foto_perfil">Foto de Perfil:</label>
+            <input type="file" name="foto_perfil" id="foto_perfil" accept="image/*">
 
-      <div class="form-group">
-        <input type="submit" class="btn btn-success btn-xl" value="Cadastrar">
-        <a href="login_farolqr.php" class="btn btn-info btn-xl">Voltar</a>
-      </div>
-      <p>Já possui cadastro? <a href="http://localhost/login/login_farolqr.php">Clique aqui para acessar o sistema.</a></p>
-    </form>
-  </div>
+            <!-- reCAPTCHA -->
+            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
 
-  <!-- VLibras -->
-  <div vw class="enabled">
-    <div vw-access-button class="active"></div>
-    <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
-  </div>
-  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-  <script>new window.VLibras.Widget('https://vlibras.gov.br/app');</script>
+            <input type="hidden" name="criar_caixa_postal" value="1">
+            <button type="submit">📬 Criar Caixa Postal</button>
+        </form>
+ <button class="btn-login" onclick="window.location.href='https://localhost/farolqr/balance_transacao.php'">
+                    Banco
+                </button>
+                <button class="btn-login" onclick="window.location.href='https://localhost/sys/index.php'">
+                    Comprar Aura
+                </button>
+                 <button class="btn-login" onclick="window.location.href='https://localhost/login/logout.php'">
+            🔐 Sair
+        </button>
+        <!-- Botões extras -->
+       
+            
+        <?php if ($mensagem): ?>
+            <div class="mensagem"><?= $mensagem ?></div>
+        <?php endif; ?>
 
-  <!-- Script reCAPTCHA -->
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        <?php if ($caixaExistente): ?>
+            <div class="caixa">
+                <strong>📦 Caixa Postal: <?= htmlspecialchars($caixaExistente['caixa_postal']) ?></strong>
+                <small>🧾 Documento CPF: <?= htmlspecialchars($caixaExistente['documento']) ?></small>
+                <small>📞 Telefone: <?= htmlspecialchars($caixaExistente['telefone']) ?></small>
+                <small>🕒 Criado em: <?= $caixaExistente['data_criacao'] ?></small>
+
+                <?php if (!empty($caixaExistente['foto_perfil'])): ?>
+                    <img src="../../../farolqr/<?= htmlspecialchars($caixaExistente['foto_perfil']) ?>" alt="Foto de perfil" class="foto-perfil">
+                <?php endif; ?>
+
+                <form method="POST" class="editar">
+                    <input type="text" name="novo_documento" placeholder="Atualizar documento" required>
+                    <input type="hidden" name="editar_documento" value="1">
+                    <button type="submit">✏️ Editar Documento</button>
+                </form>
+
+               
+                
+                
+                
+                <button class="btn-login" onclick="window.location.href='https://localhost/site/opentowork_city.php'">
+                    OpenToWork Assinantes
+                </button>
+                <button class="btn-login" onclick="window.location.href='https://localhost/caronas'">
+            Início
+        </button>
+
+       
+             
+            </div>
+        <?php endif; ?>
+    </div>
 </body>
 </html>
