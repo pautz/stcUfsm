@@ -9,25 +9,25 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 
 // Check if the user is already logged in, if yes then redirect him to welcome page
 if(isset($_SESSION["loggedin_odonto2"]) && $_SESSION["loggedin_odonto2"] === true){
-    header("location: https://carlitoslocacoes.com/farolqr/identificacao_farolqr.php");
+    header("location: http://localhost/farolqr/identificacao_farolqr.php");
     exit;
 }
- 
+  
 // Include config file
 require_once "config.php";
- 
+  
 // Define variables and initialize with empty values
 $username = $password = "";
 $username_err = $password_err = "";
- 
+  
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-
+ 
     // Verifica reCAPTCHA
     if(empty($_POST['g-recaptcha-response'])){
         die("Por favor, confirme que você não é um robô.");
     } else {
-        $recaptcha_secret = "6LcH9M4sAAAAAFep6xxJPNgr7m4LuWBavl8uKQdI"; // substitua pela sua Secret Key
+        $recaptcha_secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; // Chave de teste do Google
         $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret="
             .$recaptcha_secret."&response=".$_POST['g-recaptcha-response']);
         $responseKeys = json_decode($response, true);
@@ -71,7 +71,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $_SESSION["loggedin_odonto2"] = true;
                             $_SESSION["id"] = $id;
                             $_SESSION["username_odonto2"] = $username;                            
-                            header("location: https://carlitoslocacoes.com/farolqr/identificacao_farolqr.php");
+                            header("location: http://localhost/farolqr/identificacao_farolqr.php");
                         } else{
                             $password_err = "The password you entered was not valid.";
                         }
@@ -88,7 +88,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     mysqli_close($link);
 }
 ?>
- 
+  
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -153,10 +153,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
       <input type="password" name="password" placeholder="Senha">
 
       <!-- reCAPTCHA -->
-      <div class="g-recaptcha" data-sitekey="6LcH9M4sAAAAAFYMLI8H3YVtrmLrtbdgILf9jxWk"></div>
+      <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
 
       <input type="submit" class="btn btn-primary btn-xl" value="Entrar">
-      <a class="btn btn-info btn-xl" href="https://carlitoslocacoes.com/">Início</a>
+      <a class="btn btn-info btn-xl" href="http://localhost/">Início</a>
       <p>Não tem conta?<br><a href="register_odonto2.php" class="btn btn-success btn-xl">Registrar-se</a></p>
     </form>
   </div>
