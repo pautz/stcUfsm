@@ -25,7 +25,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     if(empty($_POST['g-recaptcha-response'])){
         die("Por favor, confirme que você não é um robô.");
     } else {
-        $recaptcha_secret = "6LcH9M4sAAAAAFep6xxJPNgr7m4LuWBavl8uKQdI"; // Secret Key
+        $recaptcha_secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"; // Secret Key de teste do Google
         $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret="
             .$recaptcha_secret."&response=".$_POST['g-recaptcha-response']);
         $responseKeys = json_decode($response, true);
@@ -92,7 +92,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             if(mysqli_stmt_execute($stmt)){
                 $_SESSION['loggedin_odonto2'] = true;
                 $_SESSION['username_odonto2'] = $username;
-                header("location: https://carlitoslocacoes.com/farolqr/identificacao_farolqr.php");
+                header("location: http://localhost/farolqr/identificacao_farolqr.php");
                 exit;
             } else{
                 echo "Erro ao registrar. Tente novamente.";
@@ -186,14 +186,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
       <!-- reCAPTCHA -->
       <div class="form-group">
-        <div class="g-recaptcha" data-sitekey="6LcH9M4sAAAAAFYMLI8H3YVtrmLrtbdgILf9jxWk"></div>
+        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
       </div>
 
       <div class="form-group">
         <input type="submit" class="btn btn-success btn-xl" value="Cadastrar">
         <a href="login_farolqr.php" class="btn btn-info btn-xl">Voltar</a>
       </div>
-      <p>Já possui cadastro? <a href="https://carlitoslocacoes.com/login/login_farolqr.php">Clique aqui para acessar o sistema.</a></p>
+      <p>Já possui cadastro? <a href="http://localhost/login/login_farolqr.php">Clique aqui para acessar o sistema.</a></p>
     </form>
   </div>
 
