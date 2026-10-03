@@ -6,10 +6,10 @@ error_reporting(E_ALL);
 
 session_start();
 
-$host = 'localhost';
-$usuario_db = 'root';
-$senha_db = '';
-$banco = 'u839226731_farol';
+$host = getenv('DB_SERVER') ?: 'localhost';
+$usuario_db = getenv('DB_USERNAME') ?: 'root';
+$senha_db = getenv('DB_PASSWORD') ?: '';
+$banco = getenv('DB_NAME') ?: 'u839226731_farol';
 
 $conn = new mysqli($host, $usuario_db, $senha_db, $banco);
 

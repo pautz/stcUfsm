@@ -67,18 +67,19 @@ cd stcUfsm
 
 ### 2️⃣ Banco de Dados
 
-**Host de Conexão:**
+**Credenciais locais recomendadas para XAMPP/WAMP (localhost):**
 ```text
-localhost (ou 127.0.0.1)
-Usuário: u839226731_farol
-Senha: Meta6595869!
+Host: localhost (ou 127.0.0.1)
+Usuário: root
+Senha: '' (vazia)
 Banco: u839226731_farol
 ```
 
+> Se você estiver usando um banco remoto/hosteado, sobrescreva com variáveis de ambiente (`DB_SERVER`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`).
+
 **Importar SQL:**
 ```bash
-mysql -u u839226731_farol -p u839226731_farol < database.sql
-# Senha: Meta6595869!
+mysql -u root u839226731_farol < database.sql
 ```
 
 > Se não houver arquivo SQL, importe pelo phpMyAdmin ou crie as tabelas manualmente.
@@ -156,6 +157,7 @@ URL: http://localhost/stcUfsm/caronas/index.php
 | reCAPTCHA bloqueia | Chaves erradas | Usar chaves de teste |
 | Upload falha | Permissão de pasta | `chmod 755 farolqr/uploads/` |
 | Sessão não persiste | `secure=true` com HTTP | Código agora detecta automaticamente |
+| "Access denied for user" | Usuário do banco inexistente | Usar `root`/vazio em localhost |
 
 ---
 

@@ -1,8 +1,8 @@
 <?php
-$host = '127.0.0.1';
-$user = 'u839226731_farol';
-$pass = 'Meta6595869!';
-$db   = 'u839226731_farol';
+$host = getenv('DB_SERVER') ?: '127.0.0.1';
+$user = getenv('DB_USERNAME') ?: 'root';
+$pass = getenv('DB_PASSWORD') ?: '';
+$db   = getenv('DB_NAME') ?: 'u839226731_farol';
 
 $cx = new mysqli($host, $user, $pass, $db);
 
