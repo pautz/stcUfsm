@@ -114,14 +114,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["enviar_aura"])) {
                 $_SESSION["comprovante_aura"] = $comprovante;
 
                 // QR Code permanente
-                include "../tickets/2/phpqrcode/qrlib.php";
-                $qrcodeUrl = "https://localhost/aurascan.php?buscaId=" . $transacaoId;
-                $_SESSION["qrcode_url"] = $qrcodeUrl;
-                $qrDir = __DIR__ . "/qrcodes/";
-                if (!file_exists($qrDir)) mkdir($qrDir, 0777, true);
-                $qrFile = $qrDir . "comprovante_" . $transacaoId . ".png";
-                QRcode::png($qrcodeUrl, $qrFile, QR_ECLEVEL_L, 6);
-                $_SESSION["qr_file"] = "qrcodes/comprovante_" . $transacaoId . ".png";
+                // Link do comprovante
+$_SESSION["qrcode_url"] = "https://localhost/aurascan.php?buscaId=" . $transacaoId;
 
                 // Registrar comprovante
                 $stmtComp = $conn->prepare("INSERT INTO comprovantes_aura (remetente, destinatario, valor, caixa_origem, caixa_destino, transacao_id, assinatura) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -383,7 +377,19 @@ function copiarCaixaPostal() {
 <div class="comprovante">
   <h3>📄 Comprovante de Transação</h3>
     <p>ID da Transação: <?= $comprovante["id_transacao"] ?></p>
-<img class="qr" src="<?= $_SESSION["qr_file"] ?>" alt="QR Comprovante">
+<p><strong>Link do Comprovante:</strong></p>
+
+<input
+    type="text"
+    id="linkComprovante"
+    value="<?= htmlspecialchars($_SESSION['qrcode_url']) ?>"
+    readonly
+    style="width:100%;padding:10px;"
+>
+
+<br><br>
+  
+</a>
   <p><a href="<?= $_SESSION["qrcode_url"] ?>" target="_blank">🔗 Abrir comprovante</a></p>
 
   <p><strong>Remetente:</strong> <?= htmlspecialchars($comprovante["remetente"]) ?></p>
