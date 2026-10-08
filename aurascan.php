@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$usuarioLogado = $_SESSION["username_loggedin"];
+$usuarioLogado = $_SESSION["username_odonto2"];
 $conn = new mysqli("127.0.0.1", "root", "", "u839226731_farol");
 if ($conn->connect_error) die("Erro na conexão: " . $conn->connect_error);
 $conn->set_charset("utf8mb4");
